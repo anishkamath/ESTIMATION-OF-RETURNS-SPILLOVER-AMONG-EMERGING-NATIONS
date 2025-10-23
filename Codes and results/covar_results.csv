@@ -1,0 +1,28 @@
+,WTI_CoVaR_Lower,WTI_CoVaR_Upper,Brent_CoVaR_Lower,Brent_CoVaR_Upper
+India,-1.522,1.740,-1.676,1.774
+China,-2.100,1.845,-2.091,1.828
+Brazil,-2.278,2.111,-2.327,2.300
+South Korea,-2.047,2.047,-2.194,2.190
+Mexico,-2.480,2.387,-2.284,2.223
+Indonesia,-1.460,1.722,-2.197,1.718
+Kuwait,-0.513,0.550,-0.513,0.544
+Saudi 1,0.053,2.078,0.053,2.086
+Saudi 2,-0.621,0.738,-0.655,0.814
+pred_rotated_India,-1.621,,-2.157,-1.750
+pred_gumbel_India,1.619,1.619,1.619,1.619
+pred_rotated_China,-1.621,,-2.157,-1.750
+pred_gumbel_China,1.619,1.619,1.619,1.619
+pred_rotated_Brazil,-1.621,,-2.157,-1.750
+pred_gumbel_Brazil,1.619,1.619,1.619,1.619
+pred_rotated_South Korea,-1.621,,-2.157,-1.750
+pred_gumbel_South Korea,1.619,1.619,1.619,1.619
+pred_rotated_Mexico,-1.621,,-2.157,-1.750
+pred_gumbel_Mexico,1.619,1.619,1.619,1.619
+pred_rotated_Indonesia,-1.621,,-2.157,-1.750
+pred_gumbel_Indonesia,1.619,1.619,1.619,1.619
+pred_rotated_Kuwait,-1.621,,-2.157,-1.750
+pred_gumbel_Kuwait,1.619,1.619,1.619,1.619
+pred_rotated_Saudi 1,-1.621,,-2.157,-1.750
+pred_gumbel_Saudi 1,1.619,1.619,1.619,1.619
+pred_rotated_Saudi 2,-1.621,,-2.157,-1.750
+pred_gumbel_Saudi 2,1.619,1.619,1.619,1.619

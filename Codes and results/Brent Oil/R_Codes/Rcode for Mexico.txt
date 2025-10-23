@@ -1,0 +1,240 @@
+#revised: 2022.04.09
+#the code author is Maoxi Tian, College of Economics and Management, 
+#Northwest A & F University, Mexico
+##E-Mail: tmx015@126.com
+#The main codes are GumbelModel and uGumbelModel for copula quantile estimator
+#and the estimate of CoVaR and delta CoVaR
+## We take the Mexico for example
+
+library(rugarch)
+library(copula) 
+library(fGarch) 
+library(quantreg)
+
+sigo<-data_r_m_last
+
+dim(sigo)
+tail(sigo)
+
+#ARMA Egarch model
+uspec = ugarchspec(mean.model = list(armaOrder = c(1,1), include.mean = TRUE),
+variance.model = list(model = "eGARCH"),distribution.model = "sstd")
+
+f1<-function(x) {ugarchfit(uspec, data = x)}
+fit <-  apply(sigo[,2:12], 2, f1)
+
+#plot(fit$oil,which="ask")##
+#plot(fit$Mexico,which="ask")##
+##############################
+
+s_res<-residuals(fit$Mexico)
+g_res<-residuals(fit$oil)
+
+##process of Returns of the Mexico
+spec_s = uspec
+setfixed(spec_s)<-as.list(coef(fit$Mexico))
+filt_s = ugarchfilter(spec_s, sigo$Mexico)
+rrss<-cbind(s_res,sigma(filt_s),s_res/sigma(filt_s))
+ssss1<-cbind(sigo$Mexico,fitted(filt_s),s_res,sigma(filt_s),s_res/sigma(filt_s))
+
+##process of Returns of the Brent oil
+spec_g = uspec
+setfixed(spec_g)<-as.list(coef(fit$oil))
+filt_g = ugarchfilter(spec_g, sigo$oil)
+rrss1<-cbind(g_res,sigma(filt_g),g_res/sigma(filt_g))
+ssss2<-cbind(sigo$oil,fitted(filt_g),g_res,sigma(filt_g),g_res/sigma(filt_g))
+
+aaaa<-cbind(g_res/sigma(filt_g),s_res/sigma(filt_s))
+
+write.csv(aaaa, 'Mexico_resudials.csv')
+
+sigo_1<-read.csv('Mexico_resudials.csv')##input the redusuals of returns
+
+dim(sigo_1)
+tail(sigo_1)
+tail(aaaa)
+
+######################################
+o<-order(sigo_1$X)
+rd<-cbind(sigo_1$g_res.sigma.filt_g.,sigo_1$s_res.sigma.filt_s.)
+x<-rd[,1]
+y<-rd[,2]
+
+ibm = x
+crsp = y
+est.ibm = as.numeric(sstdFit(ibm)$estimate)
+est.crsp = as.numeric(sstdFit(crsp)$estimate)
+
+##############################################
+
+op <- par(mfrow=c(1,1), mgp=c(1.5, 0.8,0), mar= .1+c(3,3,2,1),
+font.main=6,font.lab=6)
+plot(x, y,col=2,cex =.5,pch=20,xlim=c(-8,8),ylim=c(-8,8),
+main='Copula Quantile Regression Curve',font.main=6,cex.main=0.95,
+xlab='Returns of Brent oil',
+ylab='Returns of the Mexico')
+legend('topleft', c("0.05 quantile","0.95 quantile"), col =c(1,1),  
+       lty = c(1,2), lwd = c(1,1),cex=0.95,text.font=6)
+
+Dat <- NULL
+Dat$x <- x
+Dat$y <- y
+
+#Rotated Gumbel copula quantile regression model
+u<-psstd(x,mean=est.ibm[1],sd=est.ibm[2],nu=est.ibm[3],xi=est.ibm[4])###Asymmetric Laplace 
+
+GumbelModel<-function(x,alpha,mu,sigma,tau)
+{
+v<-matrix(0,length(u),1)
+u<- psstd(x,mean=est.ibm[1],sd=est.ibm[2],nu=est.ibm[3],xi=est.ibm[4])
+for(i in 1 :length(u))
+{
+rootf1<-function(v){1 - exp(-((-log(1 - u[i]))^alpha + (-log(1 - v))^alpha)^(1/alpha)) * 
+    (((-log(1 - u[i]))^alpha + (-log(1 - v))^alpha)^((1/alpha) - 
+        1) * ((1/alpha) * ((-log(1 - u[i]))^(alpha - 1) * (alpha * 
+        (1/(1 - u[i]))))))-tau}
+vx<-uniroot(rootf1,c(0.00000000001,0.999999999999))
+v[i,1]<-vx$root
+}
+z<- qsstd(v,mean=est.crsp[1],sd=est.crsp[2],nu=est.crsp[3],xi=est.crsp[4])
+mu+sigma*z  ##mu is the panning parameter and sigma is the zooming parameter 
+}
+
+tau=0.05
+fit3 <- nlrq(y~GumbelModel(x,delta,mu,sigma,tau),
+data=Dat,tau=tau, start=list(delta=1.1257506,mu=-0.1261274,sigma=1.0103893),trace=TRUE)
+#lines(x, predict(fit3, newdata=x), lty=2,lwd=1,col=1)
+#coef(fit3)
+summary(fit3)
+
+
+
+#Gumbel copula quantile regression model
+u<-psstd(x,mean=est.ibm[1],sd=est.ibm[2],nu=est.ibm[3],xi=est.ibm[4])###Asymmetric Laplace 
+uGumbelModel<-function(x,delta,mu,sigma,tau)
+{
+v<-matrix(0,length(u),1)
+u<- psstd(x,mean=est.ibm[1],sd=est.ibm[2],nu=est.ibm[3],xi=est.ibm[4])
+for(i in 1 :length(u))
+{
+rootf1<-function(v){exp(-((-log(u[i]))^delta + (-log(v))^delta)^(1/delta)) * (((-log(u[i]))^delta + 
+   (-log(v))^delta)^((1/delta) - 1) * ((1/delta) * ((-log(u[i]))^(delta - 1) * (delta * (1/u[i])))))-tau}
+vx<-uniroot(rootf1,c(0.000000001,0.9999999999))
+v[i,1]<-vx$root
+}
+z<- qsstd(v,mean=est.crsp[1],sd=est.crsp[2],nu=est.crsp[3],xi=est.crsp[4])
+mu+sigma*z
+}
+
+tau=0.95
+fit1 <- nlrq(y~uGumbelModel(x,delta,mu,sigma,tau),
+data=Dat,tau=tau, start=list(delta=1.2157506,mu=0.1861274,sigma=1.015893),trace=TRUE)
+#lines(x, predict(fit1, newdata=x), lty=2,lwd=1,col=3)
+#coef(fit1)
+summary(fit1)
+
+
+
+
+#########################estimate the CoVaR######tau=0.05
+tau<-0.05
+
+u_u<-c(0.5,0.1,0.05,0.01)
+
+delta<-coef(fit3)[1]
+mu<-coef(fit3)[2]
+sigma <-coef(fit3)[3]
+
+v_f<-c(0,0,0,0)
+v_x<-c(0,0,0,0)
+for(i in 1:4)
+{
+rootf1<-function(v){1 - exp(-((-log(1 - u_u[i]))^delta + (-log(1 - v))^delta)^(1/delta)) * 
+    (((-log(1 - u_u[i]))^delta + (-log(1 - v))^delta)^((1/delta) - 
+        1) * ((1/delta) * ((-log(1 - u_u[i]))^(delta - 1) * (delta * 
+        (1/(1 - u_u[i]))))))-tau}
+vx<-uniroot(rootf1,c(0.00000001,0.99999999))###???????????? ?ڵĸ?
+v_x[i]<-vx$root
+v_f[i]<- qsstd(v_x[i],mean=est.crsp[1],sd=est.crsp[2],nu=est.crsp[3],xi=est.crsp[4])
+}
+
+z_u<-v_f 
+
+f_hat_u<-mu+sigma*z_u
+###downside CoVaR
+CoVaR_005_050 = fitted(filt_s) + sigma(filt_s)*f_hat_u[1]
+CoVaR_005_010 = fitted(filt_s) + sigma(filt_s)*f_hat_u[2]
+delta_CoVaR_005_010<-CoVaR_005_010-CoVaR_005_050
+
+CoVaR_005_005 = fitted(filt_s) + sigma(filt_s)*f_hat_u[3]
+delta_CoVaR_005_005<-CoVaR_005_005-CoVaR_005_050
+
+CoVaR_005_001 = fitted(filt_s) + sigma(filt_s)*f_hat_u[4]
+delta_CoVaR_005_001<-CoVaR_005_001-CoVaR_005_050
+
+##??2??tau=0.95
+tau<-0.95
+
+u_u<-c(0.5,0.9,0.95,0.99)
+
+delta<-coef(fit1)[1]
+mu<-coef(fit1)[2]
+sigma <-coef(fit1)[3]
+
+v_f<-c(0,0,0,0)
+v_x<-c(0,0,0,0)
+for(i in 1:4)
+{
+rootf1<-function(v){
+exp(-((-log(u_u[i]))^delta + (-log(v))^delta)^(1/delta)) * (((-log(u_u[i]))^delta + 
+   (-log(v))^delta)^((1/delta) - 1) * ((1/delta) * ((-log(u_u[i]))^(delta - 1) * (delta * (1/u_u[i])))))-tau
+}
+vx<-uniroot(rootf1,c(0.00000001,0.99999999))###???????????? ?ڵĸ?
+v_x[i]<-vx$root
+v_f[i]<- qsstd(v_x[i],mean=est.crsp[1],sd=est.crsp[2],nu=est.crsp[3],xi=est.crsp[4])
+}
+
+z_u<-v_f 
+
+f_hat_u<-mu+sigma*z_u
+###upside CoVaR
+CoVaR_095_050 = fitted(filt_s) + sigma(filt_s)*f_hat_u[1]
+CoVaR_095_010 = fitted(filt_s) + sigma(filt_s)*f_hat_u[2]
+delta_CoVaR_095_010<-CoVaR_095_010-CoVaR_095_050
+
+CoVaR_095_005 = fitted(filt_s) + sigma(filt_s)*f_hat_u[3]
+delta_CoVaR_095_005<-CoVaR_095_005-CoVaR_095_050
+
+CoVaR_095_001 = fitted(filt_s) + sigma(filt_s)*f_hat_u[4]
+delta_CoVaR_095_001<-CoVaR_095_001-CoVaR_095_050
+
+
+#################################plot the dynamic CoVaR and delta CoVaR
+op <- par(mfrow=c(1,1), mgp=c(1.5, 0.8,0), mar= .1+c(3,3,2,1),
+font.main=6,font.lab=6)
+n<-length(sigo$Mexico)
+tt<-seq(1:length(sigo$Mexico))
+plot(tt,sigo$Mexico, type = "n", main =paste('Daily Returns and Conditional Value-at-Risk\n',
+    "(alpha=", 0.05, ")", sep = ""), ylab = '', xlab = '', xlim=c(1,n),
+            ylim = c(-16, 15), 
+           cex.main = 0.8,  cex.lab = 0.9, cex.axis = 0.8)
+        points(sigo$Mexico, pch = 19, col = 'gray',cex=0.5)
+        abline(h = 0, col = "1", lty = 2)
+lines(tt,CoVaR_005_005, lwd = 1, col = 1)
+lines(tt,CoVaR_005_050, lwd = 1, col = 2,lty=1)
+lines(tt,delta_CoVaR_005_005, lwd = 1, col = 3,lty=1)
+lines(tt,CoVaR_095_005, lwd = 1, col = 1)
+lines(tt,CoVaR_095_050, lwd = 1, col = 2,lty=1)
+lines(tt,delta_CoVaR_095_005, lwd = 1, col = 3,lty=1)
+
+legend("bottomleft", c("CoVaR (beta=0.5)", "CoVaR (beta=0.05)", 
+            "delta_CoVaR"), col = c("2", "1", "3"), cex = 0.75, 
+          lty = c(1, 1, 1), lwd = c(1, 1, 1), bty = "n")
+
+dynamic<-cbind(CoVaR_005_050,CoVaR_005_005,delta_CoVaR_005_005,
+CoVaR_095_050,CoVaR_095_005,delta_CoVaR_095_005,
+sigo$Mexico)
+
+head(dynamic)
+
+write.csv(dynamic, 'Mexico.csv')
