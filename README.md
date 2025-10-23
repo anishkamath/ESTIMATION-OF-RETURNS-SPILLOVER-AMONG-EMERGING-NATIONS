@@ -1,4 +1,9 @@
-# ESTIMATION-OF-RETURNS-SPILLOVER-AMONG-EMERGING-NATIONS
+DYNAMIC RISK SPILLOVERS FROM OIL TO STOCK MARKETS AMONG THE EMERGING ECONOMIES:
+EVIDENCE FROM A
+GARCH COPULA QUANTILE REGRESSION-BASED CoVar MODEL
+
+In Partial Fulfillment of the FINANCIAL RISK ANALYSIS AND MANAGEMENT - FIN F414 Course.
+
 Novelty of the research work:
 We were able to find the relation between the different geopolitical disasters and their impact on oil prices, which further effect emerging economies
 
