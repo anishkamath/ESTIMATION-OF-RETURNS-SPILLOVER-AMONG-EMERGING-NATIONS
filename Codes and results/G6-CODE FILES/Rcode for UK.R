@@ -148,7 +148,7 @@ rootf1<-function(v){1 - exp(-((-log(1 - u_u[i]))^delta + (-log(1 - v))^delta)^(1
     (((-log(1 - u_u[i]))^delta + (-log(1 - v))^delta)^((1/delta) - 
         1) * ((1/delta) * ((-log(1 - u_u[i]))^(delta - 1) * (delta * 
         (1/(1 - u_u[i]))))))-tau}
-vx<-uniroot(rootf1,c(0.00000001,0.99999999))###ÔÚÇóÂäÔÚÇø¼ä ÄÚµÄ¸ù
+vx<-uniroot(rootf1,c(0.00000001,0.99999999))###åœ¨æ±‚è½åœ¨åŒºé—´ å†…çš„æ ¹
 v_x[i]<-vx$root
 v_f[i]<- qsstd(v_x[i],mean=est.crsp[1],sd=est.crsp[2],nu=est.crsp[3],xi=est.crsp[4])
 }
@@ -167,7 +167,7 @@ delta_CoVaR_005_005<-CoVaR_005_005-CoVaR_005_050
 CoVaR_005_001 = fitted(filt_s) + sigma(filt_s)*f_hat_u[4]
 delta_CoVaR_005_001<-CoVaR_005_001-CoVaR_005_050
 
-##£¨2£©tau=0.95
+##ï¼ˆ2ï¼‰tau=0.95
 tau<-0.95
 
 u_u<-c(0.5,0.9,0.95,0.99)
@@ -184,7 +184,7 @@ rootf1<-function(v){
 exp(-((-log(u_u[i]))^delta + (-log(v))^delta)^(1/delta)) * (((-log(u_u[i]))^delta + 
    (-log(v))^delta)^((1/delta) - 1) * ((1/delta) * ((-log(u_u[i]))^(delta - 1) * (delta * (1/u_u[i])))))-tau
 }
-vx<-uniroot(rootf1,c(0.00000001,0.99999999))###ÔÚÇóÂäÔÚÇø¼ä ÄÚµÄ¸ù
+vx<-uniroot(rootf1,c(0.00000001,0.99999999))###åœ¨æ±‚è½åœ¨åŒºé—´ å†…çš„æ ¹
 v_x[i]<-vx$root
 v_f[i]<- qsstd(v_x[i],mean=est.crsp[1],sd=est.crsp[2],nu=est.crsp[3],xi=est.crsp[4])
 }
